@@ -1,27 +1,31 @@
-import urllib.request
+import requests, re
 from bs4 import BeautifulSoup
 
+
 class Extractor:
-    decipherFunc=None
-    signatureFuncReg=r"([\"\'])signature\\1\\s*,\\s*([a-zA-Z0-9$]+)\\("
+    decipherFunc = None
+    signatureFuncReg = r"([\"\'])signature\\1\\s*,\\s*([a-zA-Z0-9$]+)\\("
 
     def downloadWeb(self, url):
-
-        s = urllib.request.urlopen(url)
-        string = ""
-        for d in s.readlines():
-            string += d.decode()
+        headers={"User-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"}
+        s = requests.get(url, headers=headers)               
         s.close()
 
-        return string
+        return s.text
 
-    def getVideoUrls(self, url):
-        videoHTML = self.downloadWeb(url)
-
-    def decipher(self, inText,  baseurl):
-        pass
+    def getVideoUrls(self, id):
+        videoHTML = self.downloadWeb("https://www.youtube.com/watch?v=" + id)
+        s=BeautifulSoup(videoHTML, "html.parser")
+        for s in s.find_all("script"):
+            if len(re.findall(r"ytplayer\.config\s=\s", s.text)) > 0:
+                return s
+        
+        
         
 
+    def decipher(self, inText,  baseurl):
+        pass       
+        
 
     _formats = {
         '5': {'ext': 'flv', 'width': 400, 'height': 240, 'acodec': 'mp3', 'abr': 64, 'vcodec': 'h263'},
@@ -117,4 +121,4 @@ class Extractor:
 
 
 k = Extractor()
-print(k.downloadWeb("https://www.google.com"))
+print(k.getVideoUrls("AOPMlIIg_38"))

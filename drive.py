@@ -39,6 +39,4 @@ if __name__ == '__main__':
   # running in production *do not* leave this option enabled.
   os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
   service = get_authenticated_service()
-  list_drive_files(service,
-                   orderBy='modifiedByMeTime desc',
-                   pageSize=5)
+  list_drive_files(service, orderBy='modifiedByMeTime desc', pageSize=5)

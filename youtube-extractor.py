@@ -1,31 +1,66 @@
-import requests, re
+import re
+import requests
 from bs4 import BeautifulSoup
-
+import json
+from urllib.parse import unquote
 
 class Extractor:
     decipherFunc = None
     signatureFuncReg = r"([\"\'])signature\\1\\s*,\\s*([a-zA-Z0-9$]+)\\("
 
+    def matchBrack(self, in_str):
+        ln = 0
+        rn = 0
+        li = 0
+        ri = 0
+        for index in range(len(in_str)):
+            if in_str[index] == '{':
+                ln += 1
+            elif in_str[index] == '}':
+                rn += 1
+                ri = index
+            if rn==ln and ln!=0:                
+                return in_str[in_str.find("{"):ri+1]
+                        
+
+        # r=re.findall(r"(?<!\\)\{(\\\{|\\\}|[^\{\}]|(?<!\\)\{.*(?<!\\)\})*(?<!\\)\}", in_str)
+        # r.reverse()
+        # for a in r:
+        #     print(a)
+
     def downloadWeb(self, url):
-        headers={"User-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"}
-        s = requests.get(url, headers=headers)               
+        headers = {
+            "User-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"}
+        s = requests.get(url, headers=headers)
         s.close()
 
         return s.text
 
     def getVideoUrls(self, id):
         videoHTML = self.downloadWeb("https://www.youtube.com/watch?v=" + id)
-        s=BeautifulSoup(videoHTML, "html.parser")
+        s = BeautifulSoup(videoHTML, "html.parser")
+        videoURLs=list()
         for s in s.find_all("script"):
-            if len(re.findall(r"ytplayer\.config\s=\s", s.text)) > 0:
-                return s
-        
-        
-        
+            target = re.findall(r"ytplayer\.config\s=\s(.*)", s.text)
+            if len(target) > 0:
+                
+                ytplayer = self.matchBrack(target[0])
+                # print(ytplayer)
+                if ytplayer != "":
+                    j = json.loads(ytplayer)
+                    args = j["args"]
+                    adaptive_fmts = args.get("adaptive_fmts", "")
+                    fmts_encoded = args.get("url_encoded_fmt_stream_map", "")
+                    for x in adaptive_fmts.split(","):
+                        videoURLs.append(unquote(unquote(x)))
+                    for x in fmts_encoded.split(","):
+                        videoURLs.append(unquote(unquote(x))) 
+                    
+                    print(videoURLs)
+                return 
 
     def decipher(self, inText,  baseurl):
-        pass       
-        
+        pass
 
     _formats = {
         '5': {'ext': 'flv', 'width': 400, 'height': 240, 'acodec': 'mp3', 'abr': 64, 'vcodec': 'h263'},
@@ -121,4 +156,4 @@ class Extractor:
 
 
 k = Extractor()
-print(k.getVideoUrls("AOPMlIIg_38"))
+k.getVideoUrls("AOPMlIIg_38")

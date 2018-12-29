@@ -54,9 +54,9 @@ class GoogleDriveApi:
         return items
 
     def pwd(self):
-        str1="/"
-        for x in self.cur_dir_list[1:]:
-            str1+=x+"/"
+        str1=""
+        for x in self.c_folder.current_path[1:]:
+            str1+="/"+x["name"]
         return str1
 
     def to_folder(self, name):

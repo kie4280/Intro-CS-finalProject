@@ -8,7 +8,8 @@ import js2py
 
 class Extractor:
     decipherFunc = None
-    funcNameReg = r";(\w*)\(\w*,[\"\']signature\"\s*,\s*[a-zA-Z0-9$]+"
+    # funcNameReg = r";(\w*)\(\w*,[\"\']signature\"\s*,\s*[a-zA-Z0-9$]+"
+    funcNameReg=r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\('
     sigFuncReg=r"(?x)(?:function\\s+%s|[{;,]\\s*%s\\s*=\\s*function|var" +\
                     "\\s+%s\\s*=\\s*function)\\s*\\(([^)]*)\\)\\s*" +\
                     "\\{([^}]+)\\}"
@@ -115,6 +116,7 @@ class Extractor:
             self.decipherFunc=found[0]
             print("evaluating")
             print(found[0])
+            func=re.findall(r'%s=function\(\w\){[a-z=\.\(\"\)]*;(.*);(?:.+)}' % self.decipherFunc, basejs)
             l=js2py.eval_js(basejs)
             print("complete")
             print(l)

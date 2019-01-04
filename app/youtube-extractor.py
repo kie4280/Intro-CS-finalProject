@@ -8,7 +8,7 @@ import js2py
 
 class Extractor:
     decipherFunc = None
-    # funcNameReg = r";(\w*)\(\w*,[\"\']signature\"\s*,\s*[a-zA-Z0-9$]+"
+    # funcNameReg = r";(\w*)\(\w*,[\"\']signature\"\s*,\s*[a-zA-Z0-9$]+" not correct
     funcNameReg=r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\('
     sigFuncReg=r"(?x)(?:function\\s+%s|[{;,]\\s*%s\\s*=\\s*function|var" +\
                     "\\s+%s\\s*=\\s*function)\\s*\\(([^)]*)\\)\\s*" +\

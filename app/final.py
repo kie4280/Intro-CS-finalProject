@@ -3,12 +3,20 @@ import pprint
 import re
 g = GoogleDriveApi()
 while True:
-    command = input(g.pwd()+">")
-    cd_dir = re.match(r"\s*cd\s*[\"']*([\w./\s]+)[\"']*\s*$", command)
-    ls_dir = re.match(r"\s*ls\s*$", command)
+    user_in = input(g.pwd()+">")    
+    args=re.findall(r"[\^\s]*[\"\']*([\w.-/\\]+)[\"\']*[\s\$]*", user_in)
+    command=args[0]
+    # args=args[1:]
+    # print(args)
+    cd_dir = re.match(r"\s*cd\s*[\"']*([\w./\s]+)[\"']*\s*$", user_in)
+    ls_dir = re.match(r"\s*ls\s*$", user_in)
     if cd_dir != None:
         args = cd_dir.group(1)
-        g.to_folder(args)
+        try:
+            g.to_folder(args)
+        except GoogleDriveApiException as e:            
+            if e.args[0]==GoogleDriveApiException.NO_DIR:
+                print("No such directory!!")
     if ls_dir != None:
         try:
             pprint.PrettyPrinter(indent=2).pprint(g.list_content())

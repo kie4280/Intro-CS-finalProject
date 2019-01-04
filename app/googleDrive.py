@@ -31,6 +31,7 @@ class GoogleDriveApi:
     
     def signin(self):
         self.api_service = self.get_authenticated_service()
+        self.list_content()
         pass
 
     def signout(self):
@@ -44,6 +45,7 @@ class GoogleDriveApi:
     def get_authenticated_service(self):
         store = file.Storage('token.json')
         creds = store.get()
+        
         if not creds or creds.invalid:
             flow = client.flow_from_clientsecrets(
                 'client_secret.json', self.SCOPES)
@@ -81,11 +83,15 @@ class GoogleDriveApi:
             ) if self.c_folder.parent() != None else self.c_folder
         else:
             name = name.rstrip("/")
-            for c in range(len(self.c_folder.child)):
+            length=len(self.c_folder.child)
+            for c in range(length):
 
                 if self.c_folder.child[c].current_path[-1]["name"] == name:
                     self.c_folder = self.c_folder.child[c]
                     break
+                elif c == length-1:
+                    raise GoogleDriveApiException(GoogleDriveApiException.NO_DIR)
+                
 
     def get_path_list(self):
         return self.c_folder.current_path
@@ -130,7 +136,7 @@ class FolderStruct:
 
     def parent(self):
         return self.parentFolder
-
+    
     def add_child(self, folders):
 
         for folder in folders:
@@ -142,6 +148,8 @@ class FolderStruct:
             child_.parentFolder = self
             self.child.append(child_)
             pass
+
 class GoogleDriveApiException(Exception):
+
     NOT_SIGNIN_EXP="You are not signed in"
     NO_DIR="No such directory"

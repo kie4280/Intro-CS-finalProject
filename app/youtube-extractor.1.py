@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import json
 from urllib.parse import unquote
 from itertools import chain
+from jsinterpret import JSInterpreter
 
 
 class Extractor:
@@ -129,6 +130,16 @@ class Extractor:
             self.decipherFunc = found[0]
             print("evaluating")
             print(found[0])
+
+            funcname = re.search(
+            r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',            
+            basejs)
+
+            jsi = JSInterpreter(basejs)
+            print(funcname.group())
+            initial_function = jsi.extract_function(funcname.group())
+
+            
             funcalls = re.findall(
                 r'%s=function\(\w\){[a-z=\.\(\"\)]*;(.*);(?:.+)}' % self.decipherFunc, basejs)
             if len(funcalls) == 0:

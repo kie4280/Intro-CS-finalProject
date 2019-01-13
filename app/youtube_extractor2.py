@@ -60,10 +60,13 @@ class Extractor:
         return result
 
     def getVideoUrls(self, id):
-        videoHTML = self._downloadWeb("https://www.youtube.com/watch?v=" + id)
-        # videoHTML=self._downloadWeb("http://www.youtube.com/get_video_info?video_id=zjosQxz_b44")
-        s = BeautifulSoup(videoHTML, "html.parser")
-        videoURLs = list()
+        # videoHTML = self._downloadWeb("https://www.youtube.com/watch?v=" + id)
+        videoHTML=self._downloadWeb("http://www.youtube.com/get_video_info?video_id=zjosQxz_b44")
+        videoHTML=unquote(unquote(videoHTML))
+        s=BeautifulSoup(videoHTML)
+        r=re.search(r"player_response={(?:.|\n)*}\&", videoHTML)
+        print(r.group())
+        t=s.get("player_response")
         target = list()
         results = dict()
         for s in s.find_all("script"):

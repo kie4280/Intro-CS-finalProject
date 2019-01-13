@@ -53,4 +53,3 @@ class CException(Exception):
     NO_TARGET="no target format"
 
 c=cloudConvert()
-c.upload()

@@ -70,19 +70,22 @@ class GoogleDriveApi:
         str1 = "/"
         c = self.c_folder.current_path[1:]
         for x in range(len(c)):
-            str1 += c[x]["name"]+("/" if x > 0 else "")
+            str1 += ("/" if x > 0 else "")+c[x]["name"]
         return str1
 
     def to_folder(self, name):
 
+        print("name1", name)
         if name[0] == "/":
-            ss = name.split("/")
-            pass
+            ss = name[1:].split("/")
+            self.c_folder=self.root
+            for s in ss:
+                self.to_folder(s)
         elif name == "../":
-            self.c_folder = self.c_folder.parent(
-            ) if self.c_folder.parent() != None else self.c_folder
+            self.c_folder = self.c_folder.parent() if \
+            self.c_folder.parent() != None else self.c_folder
         else:
-            name = name.rstrip("/")
+            name = name.rstrip("/").lstrip("/")
             length=len(self.c_folder.child)
             for c in range(length):
 
@@ -91,6 +94,7 @@ class GoogleDriveApi:
                     break
                 elif c == length-1:
                     raise GoogleDriveApiException(GoogleDriveApiException.NO_DIR)
+        self.list_content()
                 
 
     def get_path_list(self):

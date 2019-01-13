@@ -16,7 +16,7 @@ setup(
     packages=["app"],
 
     # Include additional files into the package
-    data_files=[("json", ["client_secret.json"])],
+    data_files=[("json", ["client_secret.json", "apikey.json"])],
     include_package_data=True, 
 
     # Details

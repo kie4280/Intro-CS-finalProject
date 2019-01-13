@@ -2,6 +2,8 @@ from googleDrive import GoogleDriveApi, GoogleDriveApiException
 import pprint
 import re
 
+COMMANDS=["cd", "ls", "signin", "signout", "download", "exit", ]
+
 g = GoogleDriveApi()
 
 def empty(x):
@@ -9,24 +11,29 @@ def empty(x):
         return False
     else:
         return True
+
+print("Enter command or 'help' for a list of commands")
 while True:
     user_in = input(g.pwd()+">")    
-    args=re.findall(r"(?:^|\s)*(?:[\"\']+?([\s\w.-/\\]+)[\"\']+?|([\w.-/\\]+))(?:^|\s)*", user_in)
-    if len(args)==0:
+    argsF=re.findall(r"(?:^|\s)*(?:[\"\']+?([\s\w.-/\\]+)[\"\']+?|([\w.-/\\]+))(?:^|\s)*", user_in)
+    if len(argsF)==0:
         continue
-    command=args[0][1]    
-    args_q=list(filter(empty, [q[0] if q[0]!='' else None for q in args[1:]]))
-    args_nq=list(filter(empty, [q[1] if q[1]!='' else None for q in args[1:]]))
-    print(args_q, args_nq)
+    command=argsF[0][1]        
+    args=list()
+    for a in range(1, len(argsF)):
+        q1=argsF[a][0]!=''
+        q0=argsF[a][1]!=''
+        if q1 or q0:            
+            args.append((argsF[a][0] if q1 else argsF[a][1], q1)) 
+             #(str, bool) => (argument, isQuoted)
+
+    print(args)
     
     # download = re.search(r"download\s*([\w.-/\\]+)")
-    if command == "cd":
-        
+    if command == "cd":        
         try:
-            if len(args_nq)>0:
-                g.to_folder(args_nq[0])
-            elif len(args_q)>0:
-                g.to_folder(args_q[0])
+            if len(args)>0:                
+                g.to_folder(args[0][0])            
             
         except GoogleDriveApiException as e:            
             if e.args[0]==GoogleDriveApiException.NO_DIR:
@@ -46,4 +53,6 @@ while True:
         g.signin()
     elif command == "signout":
         g.signout()
-        
+    elif command == "help":
+        printer=pprint.PrettyPrinter()        
+        print(" ".join(COMMANDS))

@@ -9,7 +9,7 @@ class cloudConvert:
     api=None
     process=None
     def __init__(self):
-        j=json.load(open("client_secret.json"))
+        j=json.load(open("apikey.json"))
         try:
             apikey=j["cloud_convert"]["api_key"]
             api=cloudconvert.Api(apikey)

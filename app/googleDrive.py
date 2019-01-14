@@ -26,9 +26,9 @@ class GoogleDriveApi:
 
     def __init__(self):
 
-        self.c_folder = FolderStruct()        
+        self.c_folder = FolderStruct()
         self.root = self.c_folder
-    
+
     def signin(self):
         self.api_service = self.get_authenticated_service()
         self.list_content()
@@ -37,15 +37,15 @@ class GoogleDriveApi:
     def signout(self):
         store = file.Storage('token.json')
         store.locked_delete()
-        self.api_service=None
-        self.c_folder=FolderStruct()
-        self.root=self.c_folder
+        self.api_service = None
+        self.c_folder = FolderStruct()
+        self.root = self.c_folder
         pass
 
     def get_authenticated_service(self):
         store = file.Storage('token.json')
         creds = store.get()
-        
+
         if not creds or creds.invalid:
             flow = client.flow_from_clientsecrets(
                 'client_secret.json', self.SCOPES)
@@ -57,7 +57,8 @@ class GoogleDriveApi:
     def list_content(self, trashed="false", **kwargs):
 
         if self.api_service == None:
-            raise GoogleDriveApiException(GoogleDriveApiException.NOT_SIGNIN_EXP)
+            raise GoogleDriveApiException(
+                GoogleDriveApiException.NOT_SIGNIN_EXP)
         # print(self.c_folder.current_path[-1])
         results = self.api_service.files().list(q=u"'{0}' in parents and trashed={1}".format(
             self.c_folder.current_path[-1]["id"], trashed), orderBy="folder, name", pageSize=50, spaces="drive", fields="nextPageToken, files(id, name)", **kwargs).execute()
@@ -70,44 +71,38 @@ class GoogleDriveApi:
         str1 = "/"
         c = self.c_folder.current_path[1:]
         for x in range(len(c)):
-            str1 += ("/" if x > 0 else "")+c[x]["name"]
+            str1 += ("/" if x > 0 else "") + c[x]["name"]
         return str1
 
     def to_folder(self, name):
 
-        if name=="":
-            return      
-        
-        elif name[0] == "/":            
-            self.c_folder=self.root  
-              
+        if name == "":
+            return
+
+        elif name[0] == "/":
+            self.c_folder = self.root
+
         if name == "../":
             self.c_folder = self.c_folder.parent() if \
-            self.c_folder.parent() != None else self.c_folder
-        elif name!="/":
+                self.c_folder.parent() != None else self.c_folder
+        elif name != "/":
             name = name.rstrip("/").lstrip("/")
-            names=name.split("/")
+            names = name.split("/")
             # print(names)
-        
+
             for c in self.c_folder.child:
-                
+
                 if c.current_path[-1]["name"] == names[0]:
-                    self.c_folder = c   
-                    self.list_content()           
-                    if name.find("/")!=-1:      
+                    self.c_folder = c
+                    self.list_content()
+                    if name.find("/") != -1:
                         self.to_folder(name[name.find("/")+1:])
                     break
             else:
                 raise GoogleDriveApiException(GoogleDriveApiException.NO_DIR)
-                    
-        
-                
 
     def get_path_list(self):
         return self.c_folder.current_path
-
-    def IdToPath(self, Id):
-        pass
 
     def pathToId(self, path):
         path = path.lstrip().rstrip()
@@ -123,15 +118,32 @@ class GoogleDriveApi:
 
             return id
 
-    def createFolder(self, des, name):
-        file_metadata = {"name": name,
-                         "mimeType": "application/vnd.google-apps.folder"}
+    def createFolder(self, foldername):
+        file_metadata = {"name": foldername,
+                         "mimeType": "application/vnd.google-apps.folder",
+                         "parents": [self.c_folder.current_path[-1]["id"]]}
+        if self.api_service == None:
+            raise GoogleDriveApiException(
+                GoogleDriveApiException.NOT_SIGNIN_EXP)
         exec = self.api_service.files().create(body=file_metadata, fields="id")\
             .execute()
         print(exec.get("id"))
 
-    def createFile(self, des, file):
-        file1 = MediaFileUpload("client_secret.json", mimetype="text/json")
+    def createFile(self, des, infile, filename):
+        media = MediaFileUpload(infile)
+        file_metadata = {"name": filename,
+                         "parents": [self.c_folder.current_path[-1]["id"]]}
+        if self.api_service == None:
+            raise GoogleDriveApiException(
+                GoogleDriveApiException.NOT_SIGNIN_EXP)
+        self.api_service.files().create(
+            body=file_metadata, media_body=media, fields="id", resumable=True).execute()
+        
+
+    def remove(self, infile):
+        pass
+
+    def move_to(self, des):
         pass
 
 
@@ -144,9 +156,9 @@ class FolderStruct:
     def __init__(self):
         self.child = list()
 
-    def parent(self):
+    def get_parent(self):
         return self.parentFolder
-    
+
     def add_child(self, folders):
 
         for folder in folders:
@@ -159,7 +171,8 @@ class FolderStruct:
             self.child.append(child_)
             pass
 
+
 class GoogleDriveApiException(Exception):
 
-    NOT_SIGNIN_EXP="You are not signed in"
-    NO_DIR="No such directory"
+    NOT_SIGNIN_EXP = "You are not signed in"
+    NO_DIR = "No such directory"

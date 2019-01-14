@@ -44,10 +44,12 @@ while True:
         except GoogleDriveApiException as e:
             if e.args[0]==GoogleDriveApiException.NOT_SIGNIN_EXP:
                 print("You are not signed in. To sign in type the command 'signin'")
+    elif command == "mkdir":
+        g.createFolder(args[0][0])
 
     elif command =="download":
-        pass
-    if command == "exit":
+        
+    elif command == "exit":
         exit()
     elif command == "signin":
         g.signin()
@@ -56,3 +58,5 @@ while True:
     elif command == "help":
         printer=pprint.PrettyPrinter()        
         print(" ".join(COMMANDS))
+    else:
+        print("Unknown command '%s'"%command)

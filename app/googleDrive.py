@@ -58,7 +58,7 @@ class GoogleDriveApi:
 
         if self.api_service == None:
             raise GoogleDriveApiException(GoogleDriveApiException.NOT_SIGNIN_EXP)
-        print(self.c_folder.current_path[-1])
+        # print(self.c_folder.current_path[-1])
         results = self.api_service.files().list(q=u"'{0}' in parents and trashed={1}".format(
             self.c_folder.current_path[-1]["id"], trashed), orderBy="folder, name", pageSize=50, spaces="drive", fields="nextPageToken, files(id, name)", **kwargs).execute()
         items = results.get("files", None)
@@ -74,8 +74,6 @@ class GoogleDriveApi:
         return str1
 
     def to_folder(self, name):
-
-        print("name1", name)
 
         if name=="":
             return      
@@ -94,14 +92,15 @@ class GoogleDriveApi:
             for c in self.c_folder.child:
                 
                 if c.current_path[-1]["name"] == names[0]:
-                    self.c_folder = c              
+                    self.c_folder = c   
+                    self.list_content()           
                     if name.find("/")!=-1:      
                         self.to_folder(name[name.find("/")+1:])
                     break
             else:
                 raise GoogleDriveApiException(GoogleDriveApiException.NO_DIR)
                     
-        self.list_content()
+        
                 
 
     def get_path_list(self):

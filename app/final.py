@@ -27,7 +27,7 @@ while True:
             args.append((argsF[a][0] if q1 else argsF[a][1], q1)) 
              #(str, bool) => (argument, isQuoted)
 
-    print(args)
+    # print(args)
     
     # download = re.search(r"download\s*([\w.-/\\]+)")
     if command == "cd":        

@@ -31,6 +31,6 @@ setup(
     # Dependent packages (distributions)
     
     install_requires=[
-        "requests", "beautifulsoup4", "httplib2", "google-api-python-client", "oauth2client"
+        "requests", "beautifulsoup4", "httplib2", "google-api-python-client", "oauth2client", "cloudconvert"
     ]
 )

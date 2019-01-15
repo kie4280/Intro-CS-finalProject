@@ -62,7 +62,13 @@ class Extractor:
     def getVideoUrls(self, id):
         videoHTML = self._downloadWeb("https://www.youtube.com/watch?v=" + id)
         # videoHTML=self._downloadWeb("http://www.youtube.com/get_video_info?video_id=zjosQxz_b44")
+        # print(videoHTML)
         s = BeautifulSoup(videoHTML, "html.parser")
+        error = s.find(attrs={"class":
+                      "reason style-scope yt-player-error-message-renderer"})
+        # if error == None:
+        #     print("error")
+        #     raise YouTubeError(YouTubeError.MAL_FORMED_VIDEO_ID)
         videoURLs = list()
         target = list()
         results = dict()
@@ -90,7 +96,7 @@ class Extractor:
                 # print(x)
                 keymap = self._getFields(x)
                 # print(keymap)
-                parameters = keymap.get("sparams", None).split(",")
+
                 finalUrl = keymap.get(
                     "url", "")+"?signature="
                 if "s" in keymap:
@@ -117,7 +123,7 @@ class Extractor:
         result = ""
 
         if self.decipherFunc == None:
-            print(fake_cipher)
+            # print(fake_cipher)
             basejs = self._downloadWeb(self.basejsurl)
 
             for i in range(len(self.funcNameReg)):
@@ -151,7 +157,7 @@ class Extractor:
     def _get_transform_func(self, basejs, objname):
         pattern = r'var %s={((?:.|\n)*?)};' % re.escape(objname)
         match = re.findall(pattern, basejs)
-        print(match)
+        # print(match)
 
         if len(match) == 0:
             pass
@@ -164,7 +170,7 @@ class Extractor:
             raise YouTubeError(YouTubeError.ARGUMENT_ERROR)
         for procedure in self.decipher_procedures:
             fn, arg = procedure
-            print(fn, arg)
+            # print(fn, arg)
             cipher = self.funcCallMaps[fn](cipher, int(arg))
 
         # print(cipher)
@@ -216,9 +222,10 @@ class YouTubeError(Exception):
     DICPH_BODY = "Unable to find function body"
     TRANSLATE_ERROR = "Could not translate javascript function to python"
     ARGUMENT_ERROR = "Too few arguments to decipher code"
+    MAL_FORMED_VIDEO_ID = "Video url is incorrect or something bad has happened"
     pass
 
 
 # k = Extractor()
-# print(k.getVideoUrls("s44whB4w1Jw"))
+# print(k.getVideoUrls("s44hB4w1Jw"))
 # print(k._splice([1,2,3,4,5,6,7,8,9], 4))

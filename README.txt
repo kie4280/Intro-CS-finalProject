@@ -1,0 +1,1 @@
+To run the program, go to the terminal and run the command 'python final.py'

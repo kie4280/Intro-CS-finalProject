@@ -34,6 +34,9 @@ class GoogleDriveApi:
         self.list_content()
         pass
 
+    def isSignedin(self):
+        return self.api_service!=None
+
     def signout(self):
         store = file.Storage('token.json')
         store.locked_delete()
@@ -83,8 +86,8 @@ class GoogleDriveApi:
             self.c_folder = self.root
 
         if name == "../":
-            self.c_folder = self.c_folder.parent() if \
-                self.c_folder.parent() != None else self.c_folder
+            self.c_folder = self.c_folder.get_parent() if \
+                self.c_folder.get_parent()!= None else self.c_folder
         elif name != "/":
             name = name.rstrip("/").lstrip("/")
             names = name.split("/")
@@ -129,15 +132,15 @@ class GoogleDriveApi:
             .execute()
         print(exec.get("id"))
 
-    def createFile(self, des, infile, filename):
-        media = MediaFileUpload(infile)
+    def createFile(self, infile, filename):
+        media = MediaFileUpload(infile, resumable=True)
         file_metadata = {"name": filename,
                          "parents": [self.c_folder.current_path[-1]["id"]]}
         if self.api_service == None:
             raise GoogleDriveApiException(
                 GoogleDriveApiException.NOT_SIGNIN_EXP)
         self.api_service.files().create(
-            body=file_metadata, media_body=media, fields="id", resumable=True).execute()
+            body=file_metadata, media_body=media, fields="id").execute()
         
 
     def remove(self, infile):

@@ -4,7 +4,7 @@ import threading
 import time
 from formats import _formats
 
-test_url="https://r3---sn-un57en7l.googlevideo.com/videoplayback?sparams=clen,dur,ei,expire,gir,id,ip,ipbits,itag,lmt,mime,mm,mn,ms,mv,pl,ratebypass,requiressl,source&ratebypass=yes&lmt=1537596754559668&expire=1547490127&mime=video/mp4&id=o-APMraSM2HJ6ruE7HiMjeZibNCIU-PyxpO6tqwGlX9TNw&dur=238.422&gir=yes&c=WEB&ip=140.113.139.244&clen=18570777&fvip=3&ei=7348XLiGIY7b4QK5oongCw&requiressl=yes&itag=18&source=youtube&key=cms1&ipbits=0&pl=17&signature=06BD82D6FE3622777B097F56E6002869B9E66735.68BE9A37B4066C31BE42D263AF11FB456B45D641&title=Bad+Blood+-+Taylor+Swift+-+ONE+TAKE%21%21+Macy+Kate+%26+Ben+Kheng+Cover&redirect_counter=1&cm2rm=sn-oju0-u2xl7l&req_id=2dbb706e1a6a3ee&cms_redirect=yes&mm=29&mn=sn-un57en7l&ms=rdu&mt=1547468811&mv=m"
+# test_url="https://r3---sn-un57en7l.googlevideo.com/videoplayback?sparams=clen,dur,ei,expire,gir,id,ip,ipbits,itag,lmt,mime,mm,mn,ms,mv,pl,ratebypass,requiressl,source&ratebypass=yes&lmt=1537596754559668&expire=1547490127&mime=video/mp4&id=o-APMraSM2HJ6ruE7HiMjeZibNCIU-PyxpO6tqwGlX9TNw&dur=238.422&gir=yes&c=WEB&ip=140.113.139.244&clen=18570777&fvip=3&ei=7348XLiGIY7b4QK5oongCw&requiressl=yes&itag=18&source=youtube&key=cms1&ipbits=0&pl=17&signature=06BD82D6FE3622777B097F56E6002869B9E66735.68BE9A37B4066C31BE42D263AF11FB456B45D641&title=Bad+Blood+-+Taylor+Swift+-+ONE+TAKE%21%21+Macy+Kate+%26+Ben+Kheng+Cover&redirect_counter=1&cm2rm=sn-oju0-u2xl7l&req_id=2dbb706e1a6a3ee&cms_redirect=yes&mm=29&mn=sn-un57en7l&ms=rdu&mt=1547468811&mv=m"
 
 class cloudConvert:
     
@@ -12,31 +12,43 @@ class cloudConvert:
     api=None
     process=None
     checker=None
+    fileName="a"
+    extension=""
+    des=None
+    _callback=None
     def __init__(self):
-        j=json.load(open("apikey.json"))
-        
+        j=json.load(open("apikey.json"))        
         try:
             apikey=j["cloud_convert"]["api_key"]
             self.api=cloudconvert.Api(apikey)
         except KeyError:
             raise CException(CException.NO_KEY)
-    def createNewProcess(self, fromf, tof):
+    def convert(self, videoURLs, fromf, tof, videoID):
+        
         pass
-    def upload(self, videoURLs, fromf, tof):
+    def _upload(self, videoURLs, fromf, tof, videoID):
+        self.extension = fromf
+        self.videoID=videoID
         self.process=self.api.convert({"inputformat":fromf,
         "outputformat":tof, "input":"download", "file":videoURLs, 
-        "filename":"a.mp4"})
-        checker=statusChecker("status", 1, self.process, self.updatestatus, 
-        self.download)
+        "filename":self.fileName+"."+fromf})
+        checker=statusChecker("status", 1, self.process, self._updatestatus, 
+        self._download)
         checker.run()
 
-    def updatestatus(self):
+    def _updatestatus(self):
         print(self.process["message"] + "...")
         pass
         
+    def registerCallback(self, func, filename="converted.mp3", des=None):
+        self._callback=func
+        self.des=des
 
-    def download(self, filename):
-        self.process.download(filename)
+    def _download(self):
+        if self._callback != None:
+            self._callback({"filename":self.videoID, "des":self.des})
+        self.process.download(self.videoID + self.extension)
+    
 
 class statusChecker(threading.Thread):
 
@@ -48,7 +60,7 @@ class statusChecker(threading.Thread):
         self.name=name
         self.ConvertProcess=ConvertProcess
         self.update=_callback_update
-        self.download=_callback_download
+        self.finished=_callback_download
 
     def run(self):
         self.ConvertProcess.refresh()
@@ -61,7 +73,7 @@ class statusChecker(threading.Thread):
                 self.prevstat=self.ConvertProcess["message"]
                 
             if self.ConvertProcess["message"]=="Conversion finished!":
-                self.download("a.mp3")
+                self.finished()
                 break
             else:
                 time.sleep(1)
@@ -72,5 +84,5 @@ class CException(Exception):
     CONVERT_ERROR="convert error"
     NO_TARGET="no target format"
 
-c=cloudConvert()
-c.upload(test_url, "mp4", "mp3")
+# c=cloudConvert()
+# c.upload(test_url, "mp4", "mp3")

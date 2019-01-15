@@ -8,7 +8,7 @@ from itertools import chain
 
 class Extractor:
     decipherFunc = None
-    # funcNameReg = r";(\w*)\(\w*,[\"\']signature\"\s*,\s*[a-zA-Z0-9$]+" not correct    
+    # funcNameReg = r";(\w*)\(\w*,[\"\']signature\"\s*,\s*[a-zA-Z0-9$]+" not correct
     funcNameReg = [
         r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',
         r'yt\.akamaized\.net/\)\s*\|\|\s*',
@@ -51,11 +51,11 @@ class Extractor:
 
     def _getFields(self, videoURL):
 
-        fields = re.split(r"[&\\?;]", videoURL)
+        fields = re.split(r"[&?]", videoURL)
         result = dict()
         for key in fields:
             i = key.split("=")
-            if len(i) == 2:
+            if len(i) == 2 and i[1] != "":
                 result[i[0]] = i[1]
         return result
 
@@ -92,7 +92,7 @@ class Extractor:
                 # print(keymap)
                 parameters = keymap.get("sparams", None).split(",")
                 finalUrl = keymap.get(
-                    "url", "")+"?"+"sparams="+keymap.get("sparams")+"&signature="
+                    "url", "")+"?signature="
                 if "s" in keymap:
                     fake_cipher = keymap.get("s")
                     if fake_cipher == None:
@@ -101,8 +101,8 @@ class Extractor:
                         finalUrl += self._decipher(fake_cipher)
                 else:
                     finalUrl += keymap.get("signature", "")
-                for par in parameters:
-                    finalUrl += "&"+par+"="+keymap.get(par, "")
+                for key, value in keymap.items():
+                    finalUrl += "&"+key+"="+value
 
                 results[keymap.get("itag")] = finalUrl
 
@@ -115,35 +115,37 @@ class Extractor:
 
     def _decipher(self, fake_cipher):
         result = ""
-        
+
         if self.decipherFunc == None:
             print(fake_cipher)
             basejs = self._downloadWeb(self.basejsurl)
-            found = list()
+
             for i in range(len(self.funcNameReg)):
-                found = re.findall(self.funcNameReg[i], basejs)
-                if len(found) > 0:
+                found = re.search(self.funcNameReg[i], basejs)
+                if found != None:
                     break
-            if len(found) == 0:
+            else:
                 raise YouTubeError(YouTubeError.ERROR_0)
-            self.decipherFunc = found[0]
+            decipherFuncName = found.group("sig")
             print("evaluating")
-            print(found[0])
+
             funcalls = re.findall(
-                r'%s=function\(\w\){[a-z=\.\(\"\)]*;(.*);(?:.+)}' % self.decipherFunc, basejs)
+                r'%s=function\(\w\){[a-z=\.\(\"\)]*;(.*);(?:.+)}' %
+                decipherFuncName, basejs)
             if len(funcalls) == 0:
                 raise YouTubeError(YouTubeError.DICPH_BODY)
-            funcalls=funcalls[0].split(";")
+            funcalls = funcalls[0].split(";")
             objname = funcalls[0].split(".")[0]
             funcbases = self._get_transform_func(basejs, objname)
             funcmap = self._mapper(funcbases)
 
-            result = self._apply_func([s for s in fake_cipher], funcmap,
-            [self._get_func_param(p) for p in funcalls])
+            result = self._apply_decipher_func(
+                fake_cipher, funcmap, [self._get_func_param(p) for p in funcalls])
 
-            print("complete")
+            self.decipherFunc = self._apply_decipher_func
 
-            print(result)
+        else:
+            result = self.decipherFunc(fake_cipher)
         return result
 
     def _get_transform_func(self, basejs, objname):
@@ -155,11 +157,15 @@ class Extractor:
             pass
         return match[0].replace("\n", " ").split(", ")
 
-    def _apply_func(self, cipher, map, procedures):
-        for procedure in procedures:
+    def _apply_decipher_func(self, cipher, map=None, procedures=None):
+        self.decipher_procedures = procedures if procedures != None else self.decipher_procedures
+        self.funcCallMaps = map if map != None else self.funcCallMaps
+        if self.decipher_procedures == None or self.funcCallMaps == None:
+            raise YouTubeError(YouTubeError.ARGUMENT_ERROR)
+        for procedure in self.decipher_procedures:
             fn, arg = procedure
             print(fn, arg)
-            cipher = map[fn](cipher, int(arg))
+            cipher = self.funcCallMaps[fn](cipher, int(arg))
 
         # print(cipher)
         return "".join(cipher)
@@ -185,7 +191,7 @@ class Extractor:
                 if match != None:
                     mapping[match.group(1)] = sol
         if len(mapping) == 0:
-            raise YouTubeError(YouTubeError.REGEX_NOT_MATCH)
+            raise YouTubeError(YouTubeError.TRANSLATE_ERROR)
         return mapping
 
     def _splice(self, arr, b):
@@ -208,10 +214,11 @@ class YouTubeError(Exception):
     ERROR_2 = "Error downloading file"
     DICPH_NAME = "Unable to find decipher function name"
     DICPH_BODY = "Unable to find function body"
-    REGEX_NOT_MATCH = "Could not translate javascript function to python"
+    TRANSLATE_ERROR = "Could not translate javascript function to python"
+    ARGUMENT_ERROR = "Too few arguments to decipher code"
     pass
 
 
-k = Extractor()
-print(k.getVideoUrls("nfWlot6h_JM"))
+# k = Extractor()
+# print(k.getVideoUrls("s44whB4w1Jw"))
 # print(k._splice([1,2,3,4,5,6,7,8,9], 4))

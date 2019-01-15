@@ -170,9 +170,6 @@ class Extractor:
         if match != None:
             return(match.group(1), match.group(2))
 
-    def _js2py(self, ):
-        pass
-
     def _mapper(self, functions):
 
         mapping = dict()
@@ -192,8 +189,10 @@ class Extractor:
         return mapping
 
     def _splice(self, arr, b):
-        # return arr[:b] + arr[b*2:]
-        return arr[b:]
+        # print(arr)
+        # print(arr[:b] + arr[b*2:])
+        return arr[:b] + arr[b*2:]
+        # return arr[b:]
 
     def _reverse(self, arr, b):
         return arr[::-1]

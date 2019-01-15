@@ -48,7 +48,7 @@ while True:
         g.createFolder(args[0][0])
 
     elif command =="download":
-        
+        pass
     elif command == "exit":
         exit()
     elif command == "signin":

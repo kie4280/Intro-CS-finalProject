@@ -52,7 +52,7 @@ class Extractor:
 
     def _getFields(self, videoURL):
 
-        fields = re.split(r"[&\\?;]", videoURL)
+        fields = re.split(r"[&?]", videoURL)
         result = dict()
         for key in fields:
             i = key.split("=")
@@ -92,8 +92,9 @@ class Extractor:
                 keymap = self._getFields(x)
                 # print(keymap)
                 parameters = keymap.get("sparams", None).split(",")
-                finalUrl = keymap.get(
-                    "url", "")+"?"+"sparams="+keymap.get("sparams")+"&signature="
+                # finalUrl = keymap.get(
+                #     "url", "")+"?"+"sparams="+keymap.get("sparams")+"&signature="
+                finalUrl=keymap.get("url", "")+"?signature="
                 if "s" in keymap:
                     fake_cipher = keymap.get("s")
                     if fake_cipher == None:
@@ -102,9 +103,12 @@ class Extractor:
                         finalUrl += self._decipher(fake_cipher)
                 else:
                     finalUrl += keymap.get("signature", "")
-                for par in parameters:
-                    finalUrl += "&"+par+"="+keymap.get(par, "")
-
+                # for par in parameters:
+                #     finalUrl += "&"+par+"="+keymap.get(par, "")
+                # finalUrl += "&key="+keymap.get("key")
+                for key, value in keymap.items():
+                    if key != "s" and key!= "url":
+                        finalUrl+="&"+key+"="+value
                 results[keymap.get("itag")] = finalUrl
 
                 pass
@@ -120,37 +124,34 @@ class Extractor:
         if self.decipherFunc == None:
             print(fake_cipher)
             basejs = self._downloadWeb(self.basejsurl)
-            found = list()
+            
             for i in range(len(self.funcNameReg)):
-                found = re.findall(self.funcNameReg[i], basejs)
-                if len(found) > 0:
+                found = re.search(self.funcNameReg[i], basejs)
+                if found != None:
                     break
-            if len(found) == 0:
+            else:
                 raise YouTubeError(YouTubeError.ERROR_0)
-            self.decipherFunc = found[0]
-            print("evaluating")
-            print(found[0])
-
-            funcname = re.search(
-            r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*\([^)]*\)\s*\(\s*(?P<sig>[a-zA-Z0-9$]+)\(',            
-            basejs)
+            self.decipherFunc = found.group("sig")
+            print("evaluating")                     
 
             jsi = JSInterpreter(basejs)
-            print(funcname.group())
-            initial_function = jsi.extract_function(funcname.group())
-
+            print(self.decipherFunc)
+            initial_function = jsi.extract_function(self.decipherFunc)
+            print(initial_function)
+            result=initial_function([fake_cipher])
             
-            funcalls = re.findall(
-                r'%s=function\(\w\){[a-z=\.\(\"\)]*;(.*);(?:.+)}' % self.decipherFunc, basejs)
-            if len(funcalls) == 0:
-                raise YouTubeError(YouTubeError.DICPH_BODY)
-            funcalls=funcalls[0].split(";")
-            objname = funcalls[0].split(".")[0]
-            funcbases = self._get_transform_func(basejs, objname)
-            funcmap = self._mapper(funcbases)
+            
+            # funcalls = re.findall(
+            #     r'%s=function\(\w\){[a-z=\.\(\"\)]*;(.*);(?:.+)}' % self.decipherFunc, basejs)
+            # if len(funcalls) == 0:
+            #     raise YouTubeError(YouTubeError.DICPH_BODY)
+            # funcalls=funcalls[0].split(";")
+            # objname = funcalls[0].split(".")[0]
+            # funcbases = self._get_transform_func(basejs, objname)
+            # funcmap = self._mapper(funcbases)
 
-            result = self._apply_func([s for s in fake_cipher], funcmap,
-            [self._get_func_param(p) for p in funcalls])
+            # result = self._apply_func([s for s in fake_cipher], funcmap,
+            # [self._get_func_param(p) for p in funcalls])
 
             print("complete")
 

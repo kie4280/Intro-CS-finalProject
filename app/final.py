@@ -32,24 +32,31 @@ def get_candidates(itags):
 
     return suitable
 
-def download_complete(**kwargs):
-    filename=kwargs["filename"]
+def download_complete(kwargs):
+    local_filename=kwargs["local_filename"]
+    remote_filename=kwargs["remote_filename"]
     print("download_complete called")
-    drive.createFile(filename, filename)
+    drive.createFile(local_filename, remote_filename)
 
-def download(videoID, filename):
+def download(videoID, filename=None):
+    converter.registerCallback(download_complete)
     if not drive.isSignedin():
         print("Not signed in yet")
         return
-        
-    itags = yt.getVideoUrls(videoID)
+    try:    
+        title, itags = yt.getVideoUrls(videoID)
+    except YouTubeError as e:
+        print(e.with_traceback)
+        return 
+    out_format="mp3"
     candidates = get_candidates(itags)
+    filename = filename if filename != None else title+"."+out_format
     if len(candidates)==0:
         print("Sorry, this seems to be a no sound video")
         return 
-    converter.convert(itags[candidates[0]], _formats[candidates[0]]["ext"], "mp3", videoID)
-    converter.registerCallback(download_complete)
-
+    converter.upload(itags[candidates[0]], _formats[candidates[0]]["ext"], 
+    out_format, videoID, filename)
+    
 
 print("Enter command or 'help' for a list of commands")
 while True:
@@ -89,6 +96,8 @@ while True:
     elif command == "download":
         if len(args) == 2:
             download(args[0][0], args[1][0])
+        elif len(args) == 1:
+            download(args[0][0])
         else:
             print("command with too few arguments")
     elif command == "upload":

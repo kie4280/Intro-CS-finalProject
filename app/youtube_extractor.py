@@ -59,16 +59,27 @@ class Extractor:
                 result[i[0]] = i[1]
         return result
 
+    def _getTitle(self, videoID):
+        video_info=self._downloadWeb("http://www.youtube.com/get_video_info?video_id="+videoID)
+        video_info=unquote(unquote(video_info)).replace("\\u0026", "").replace("+", " ")
+        # print(video_info)
+        fail=re.findall(r"&status=fail|errorcode|reason=Invalid parameters", video_info)
+        if len(fail) > 0:
+            raise YouTubeError(YouTubeError.MAL_FORMED_VIDEO_ID)        
+        titles=re.findall(r'&title=(.*?)&', unquote(unquote(video_info)).replace("\\u0026", "").replace("+", " "))
+        
+        if len(titles)==0:
+            raise YouTubeError(YouTubeError.TITLE_ERROR)
+        # print(titles)
+        return titles[0]
+
     def getVideoUrls(self, id):
         videoHTML = self._downloadWeb("https://www.youtube.com/watch?v=" + id)
-        # videoHTML=self._downloadWeb("http://www.youtube.com/get_video_info?video_id=zjosQxz_b44")
+        
         # print(videoHTML)
-        s = BeautifulSoup(videoHTML, "html.parser")
-        error = s.find(attrs={"class":
-                      "reason style-scope yt-player-error-message-renderer"})
-        # if error == None:
-        #     print("error")
-        #     raise YouTubeError(YouTubeError.MAL_FORMED_VIDEO_ID)
+        s = BeautifulSoup(videoHTML, "html.parser")        
+        title=self._getTitle(id)        
+       
         videoURLs = list()
         target = list()
         results = dict()
@@ -76,7 +87,8 @@ class Extractor:
             target = re.findall(self.ytplayer_configReg, s.text)
             if len(target) > 0:
                 break
-
+        else:
+            raise YouTubeError(YouTubeError.YT_CONFIG_ERROR)
         ytplayer = self._matchBrack(target[0])
         # print(ytplayer)
         if ytplayer != "":
@@ -102,7 +114,7 @@ class Extractor:
                 if "s" in keymap:
                     fake_cipher = keymap.get("s")
                     if fake_cipher == None:
-                        raise YouTubeError(YouTubeError.ERROR_1)
+                        raise YouTubeError(YouTubeError.DECIPHER_ERROR)
                     else:
                         finalUrl += self._decipher(fake_cipher)
                 else:
@@ -117,7 +129,7 @@ class Extractor:
             # print(self.basejsurl)
             # self._decipher("sdsk")
 
-        return results
+        return title, results
 
     def _decipher(self, fake_cipher):
         result = ""
@@ -131,7 +143,7 @@ class Extractor:
                 if found != None:
                     break
             else:
-                raise YouTubeError(YouTubeError.ERROR_0)
+                raise YouTubeError(YouTubeError.DICPH_NAME)
             decipherFuncName = found.group("sig")
             print("evaluating")
 
@@ -214,18 +226,19 @@ class Extractor:
         return list(chain([arr[a]], arr[1:a], [arr[0]], arr[a+1:]))
 
 
-class YouTubeError(Exception):
-    ERROR_0 = "Error finding decipher function"
-    ERROR_1 = "Error deciphering code"
-    ERROR_2 = "Error downloading file"
+class YouTubeError(Exception):    
+    DECIPHER_ERROR = "Error deciphering code"
+    DOWNLOAD_ERROR = "Error downloading file"
     DICPH_NAME = "Unable to find decipher function name"
     DICPH_BODY = "Unable to find function body"
     TRANSLATE_ERROR = "Could not translate javascript function to python"
     ARGUMENT_ERROR = "Too few arguments to decipher code"
     MAL_FORMED_VIDEO_ID = "Video url is incorrect or something bad has happened"
+    YT_CONFIG_ERROR= "No ytplater config"
+    TITLE_ERROR= " Unable to get title"
     pass
 
 
 # k = Extractor()
-# print(k.getVideoUrls("s44hB4w1Jw"))
+# print(k.getVideoUrls("Ubx6wqxocyU"))
 # print(k._splice([1,2,3,4,5,6,7,8,9], 4))

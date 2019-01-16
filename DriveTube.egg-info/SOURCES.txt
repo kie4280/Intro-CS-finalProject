@@ -1,3 +1,4 @@
+README.txt
 apikey.json
 client_secret.json
 setup.py
@@ -11,7 +12,6 @@ app/cloudConvert.py
 app/final.py
 app/formats.py
 app/googleDrive.py
-app/jsinterpret.py
 app/youtube_extractor.1.py
 app/youtube_extractor.py
 app/youtube_extractor2.py

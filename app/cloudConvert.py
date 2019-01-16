@@ -7,6 +7,7 @@ import requests
 import json
 from urllib.parse import quote
 from pathlib import Path
+import sys
 
 # test_url="https://r3---sn-un57en7l.googlevideo.com/videoplayback?sparams=clen,dur,ei,expire,gir,id,ip,ipbits,itag,lmt,mime,mm,mn,ms,mv,pl,ratebypass,requiressl,source&ratebypass=yes&lmt=1537596754559668&expire=1547490127&mime=video/mp4&id=o-APMraSM2HJ6ruE7HiMjeZibNCIU-PyxpO6tqwGlX9TNw&dur=238.422&gir=yes&c=WEB&ip=140.113.139.244&clen=18570777&fvip=3&ei=7348XLiGIY7b4QK5oongCw&requiressl=yes&itag=18&source=youtube&key=cms1&ipbits=0&pl=17&signature=06BD82D6FE3622777B097F56E6002869B9E66735.68BE9A37B4066C31BE42D263AF11FB456B45D641&title=Bad+Blood+-+Taylor+Swift+-+ONE+TAKE%21%21+Macy+Kate+%26+Ben+Kheng+Cover&redirect_counter=1&cm2rm=sn-oju0-u2xl7l&req_id=2dbb706e1a6a3ee&cms_redirect=yes&mm=29&mn=sn-un57en7l&ms=rdu&mt=1547468811&mv=m"
 
@@ -35,7 +36,7 @@ class cloudConvert:
         pass
 
     def upload(self, videoURLs, fromf, tof, videoID, out_filename):
-        self.extension = fromf
+        self.extension = tof
         self.videoID = videoID
         self.out_filename = out_filename
         self.process = self.api.convert({"inputformat": fromf,
@@ -46,8 +47,18 @@ class cloudConvert:
                                 "update": self._updatestatus, "complete": self._get_download, "download": self._callback})
         checker.run()
 
+    prevlen=0
     def _updatestatus(self):
-        print(self.process["message"], end='\r')
+        
+        a=self.process["message"]
+        if a=="Conversion finished!":
+            print(a)
+        else:
+            sys.stdout.write("\r"+" "*self.prevlen)
+            sys.stdout.flush()
+            sys.stdout.write("\r"+a)
+            sys.stdout.flush()
+            self.prevlen=len(a)        
         pass
 
     def registerCallback(self, func, filename="", des=None):

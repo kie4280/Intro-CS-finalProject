@@ -128,6 +128,7 @@ class Extractor:
             # print(results)
             # print(self.basejsurl)
             # self._decipher("sdsk")
+            print("Success!")
 
         return title, results
 

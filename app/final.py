@@ -62,7 +62,7 @@ print("Enter command or 'help' for a list of commands")
 while True:
     user_in = input(drive.pwd()+">")
     argsF = re.findall(
-        r"(?:^|\s)*(?:[\"\']+?([\s\w.\-_/\\]+)[\"\']+?|([\w.\-_/\\]+))(?:^|\s)*", user_in)
+        r"(?:^|\s)*(?:[\"\']+?([\s\w.\-_/\\:?=]+)[\"\']+?|([\w.\-_/\\:?=]+))(?:^|\s)*", user_in)
     if len(argsF) == 0:
         continue
     command = argsF[0][1]
@@ -94,10 +94,13 @@ while True:
     elif command == "mkdir":
         drive.createFolder(args[0][0])
     elif command == "download":
+        # print(args[0])
         if len(args) == 2:
-            download(args[0][0], args[1][0])
+            video_id=re.search(r"v=(.*)",args[0][0]).group(1)
+            download(video_id, args[1][0])
         elif len(args) == 1:
-            download(args[0][0])
+            video_id=re.search(r"v=(.*)",args[0][0]).group(1)
+            download(video_id)
         else:
             print("command with too few arguments")
     elif command == "upload":

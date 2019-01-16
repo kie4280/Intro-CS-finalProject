@@ -35,7 +35,7 @@ class cloudConvert:
         # self._get_download()
         pass
 
-    def upload(self, videoURLs, fromf, tof, videoID, out_filename):
+    def _try_upload(self, videoURLs, fromf, tof, videoID, out_filename):
         self.extension = tof
         self.videoID = videoID
         self.out_filename = out_filename
@@ -43,6 +43,12 @@ class cloudConvert:
                                          "outputformat": tof, "input": "download", "file": videoURLs,
                                          "filename": self.videoID+"."+fromf,
                                          "save": "true"})
+    def upload(self, videoURLs, fromf, tof, videoID, out_filename):
+        self._try_upload(videoURLs, fromf, tof, videoID, out_filename)
+        try:
+            self.process.refresh()
+        except:
+            self._try_upload(videoURLs, fromf, tof, videoID, out_filename) #retry in case something odd happened
         checker = statusChecker("status", 1, self.videoID+"."+tof, out_filename, self.process, {
                                 "update": self._updatestatus, "complete": self._get_download, "download": self._callback})
         checker.run()
@@ -136,9 +142,11 @@ class statusChecker(threading.Thread):
             else:
                 time.sleep(1)
         while True:
-            myfile = Path(self.in_filename)
+            print("downloading... ", end="")
+            myfile = Path("tmp/" + self.in_filename)
             if myfile.is_file():
                 func = self._callbacks["download"]
+                print("downloaded")
                 if func != None:
                     func({"local_filename": self.in_filename, "remote_filename": self.out_filename})
                 break

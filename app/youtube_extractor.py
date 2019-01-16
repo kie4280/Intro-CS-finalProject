@@ -60,26 +60,31 @@ class Extractor:
         return result
 
     def _getTitle(self, videoID):
-        video_info=self._downloadWeb("http://www.youtube.com/get_video_info?video_id="+videoID)
-        video_info=unquote(unquote(video_info)).replace("\\u0026", "").replace("+", " ")
+        video_info = self._downloadWeb(
+            "http://www.youtube.com/get_video_info?video_id="+videoID)
+        video_info = unquote(unquote(video_info)).replace(
+            "\\u0026", "").replace("+", " ")
         # print(video_info)
-        fail=re.findall(r"&status=fail|errorcode|reason=Invalid parameters", video_info)
-        if len(fail) > 0:
-            raise YouTubeError(YouTubeError.MAL_FORMED_VIDEO_ID)        
-        titles=re.findall(r'&title=(.*?)&', unquote(unquote(video_info)).replace("\\u0026", "").replace("+", " "))
-        
-        if len(titles)==0:
+        fail = re.findall(
+            r"&status=fail|errorcode|reason=Invalid parameters", video_info)
+
+        titles = re.findall(r'&title=(.*?)&', 
+        unquote(unquote(video_info)).replace("\\u0026", "").replace("+", " "))
+
+        if len(titles) == 0 and len(fail) == 0:
             raise YouTubeError(YouTubeError.TITLE_ERROR)
+        if len(titles) == 0 and len(fail) > 0:
+            raise YouTubeError(YouTubeError.MAL_FORMED_VIDEO_ID)
         # print(titles)
         return titles[0]
 
     def getVideoUrls(self, id):
         videoHTML = self._downloadWeb("https://www.youtube.com/watch?v=" + id)
-        
+
         # print(videoHTML)
-        s = BeautifulSoup(videoHTML, "html.parser")        
-        title=self._getTitle(id)        
-       
+        s = BeautifulSoup(videoHTML, "html.parser")
+        title = self._getTitle(id)
+
         videoURLs = list()
         target = list()
         results = dict()
@@ -227,7 +232,7 @@ class Extractor:
         return list(chain([arr[a]], arr[1:a], [arr[0]], arr[a+1:]))
 
 
-class YouTubeError(Exception):    
+class YouTubeError(Exception):
     DECIPHER_ERROR = "Error deciphering code"
     DOWNLOAD_ERROR = "Error downloading file"
     DICPH_NAME = "Unable to find decipher function name"
@@ -235,8 +240,8 @@ class YouTubeError(Exception):
     TRANSLATE_ERROR = "Could not translate javascript function to python"
     ARGUMENT_ERROR = "Too few arguments to decipher code"
     MAL_FORMED_VIDEO_ID = "Video url is incorrect or something bad has happened"
-    YT_CONFIG_ERROR= "No ytplater config"
-    TITLE_ERROR= " Unable to get title"
+    YT_CONFIG_ERROR = "No ytplater config"
+    TITLE_ERROR = " Unable to get title"
     pass
 
 

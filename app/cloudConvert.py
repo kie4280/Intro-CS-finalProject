@@ -7,7 +7,7 @@ import requests
 import json
 from urllib.parse import quote
 from pathlib import Path
-import sys
+import sys, os
 
 # test_url="https://r3---sn-un57en7l.googlevideo.com/videoplayback?sparams=clen,dur,ei,expire,gir,id,ip,ipbits,itag,lmt,mime,mm,mn,ms,mv,pl,ratebypass,requiressl,source&ratebypass=yes&lmt=1537596754559668&expire=1547490127&mime=video/mp4&id=o-APMraSM2HJ6ruE7HiMjeZibNCIU-PyxpO6tqwGlX9TNw&dur=238.422&gir=yes&c=WEB&ip=140.113.139.244&clen=18570777&fvip=3&ei=7348XLiGIY7b4QK5oongCw&requiressl=yes&itag=18&source=youtube&key=cms1&ipbits=0&pl=17&signature=06BD82D6FE3622777B097F56E6002869B9E66735.68BE9A37B4066C31BE42D263AF11FB456B45D641&title=Bad+Blood+-+Taylor+Swift+-+ONE+TAKE%21%21+Macy+Kate+%26+Ben+Kheng+Cover&redirect_counter=1&cm2rm=sn-oju0-u2xl7l&req_id=2dbb706e1a6a3ee&cms_redirect=yes&mm=29&mn=sn-un57en7l&ms=rdu&mt=1547468811&mv=m"
 
@@ -43,7 +43,7 @@ class cloudConvert:
                                          "outputformat": tof, "input": "download", "file": videoURLs,
                                          "filename": self.videoID+"."+fromf,
                                          "save": "true"})
-        checker = statusChecker("status", 1, self.videoID+"."+fromf, out_filename, self.process, {
+        checker = statusChecker("status", 1, self.videoID+"."+tof, out_filename, self.process, {
                                 "update": self._updatestatus, "complete": self._get_download, "download": self._callback})
         checker.run()
 
@@ -52,6 +52,8 @@ class cloudConvert:
         
         a=self.process["message"]
         if a=="Conversion finished!":
+            sys.stdout.write("\r"+" "*self.prevlen+"\r")
+            sys.stdout.flush()
             print(a)
         else:
             sys.stdout.write("\r"+" "*self.prevlen)
@@ -76,7 +78,10 @@ class cloudConvert:
         #         f.write(requests.get("https://" + i["output"]["url"]).text)
         # else:
         #     self.process.download(self.videoID + self.extension)
-        self.process.download(self.videoID + "." + self.extension)
+        folder=Path("tmp")
+        if not folder.exists():
+            folder.mkdir()
+        self.process.download("tmp/"+self.videoID + "." + self.extension)
 
     def list_previous_conversions(self):
         videos = list()

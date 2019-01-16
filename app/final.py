@@ -34,9 +34,9 @@ def get_candidates(itags):
 
 def download_complete(kwargs):
     local_filename=kwargs["local_filename"]
-    remote_filename=kwargs["remote_filename"]
-    print("download_complete called")
+    remote_filename=kwargs["remote_filename"]    
     drive.createFile(local_filename, remote_filename)
+    print("upload complete")
 
 def download(videoID, filename=None):
     converter.registerCallback(download_complete)
@@ -46,7 +46,7 @@ def download(videoID, filename=None):
     try:    
         title, itags = yt.getVideoUrls(videoID)
     except YouTubeError as e:
-        print(e.with_traceback)
+        print(e.args[0])
         return 
     out_format="mp3"
     candidates = get_candidates(itags)

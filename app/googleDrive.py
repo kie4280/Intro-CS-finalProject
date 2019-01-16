@@ -133,7 +133,7 @@ class GoogleDriveApi:
         print(exec.get("id"))
 
     def createFile(self, infile, filename):
-        media = MediaFileUpload(infile, resumable=True)
+        media = MediaFileUpload("tmp/"+infile, resumable=True)
         file_metadata = {"name": filename,
                          "parents": [self.c_folder.current_path[-1]["id"]]}
         if self.api_service == None:

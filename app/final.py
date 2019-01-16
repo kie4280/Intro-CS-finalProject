@@ -46,7 +46,7 @@ def download(videoID, filename=None):
     try:    
         title, itags = yt.getVideoUrls(videoID)
     except YouTubeError as e:
-        print(e.with_traceback)
+        print(e.with_traceback.value)
         return 
     out_format="mp3"
     candidates = get_candidates(itags)

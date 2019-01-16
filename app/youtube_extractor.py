@@ -64,12 +64,13 @@ class Extractor:
         video_info=unquote(unquote(video_info)).replace("\\u0026", "").replace("+", " ")
         # print(video_info)
         fail=re.findall(r"&status=fail|errorcode|reason=Invalid parameters", video_info)
-        if len(fail) > 0:
-            raise YouTubeError(YouTubeError.MAL_FORMED_VIDEO_ID)        
+            
         titles=re.findall(r'&title=(.*?)&', unquote(unquote(video_info)).replace("\\u0026", "").replace("+", " "))
         
-        if len(titles)==0:
+        if len(titles)==0 and len(fail)>0:
             raise YouTubeError(YouTubeError.TITLE_ERROR)
+        if len(titles)==0 and len(fail) > 0:
+            raise YouTubeError(YouTubeError.MAL_FORMED_VIDEO_ID)    
         # print(titles)
         return titles[0]
 
